@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  pastors   Pastor[] @relation("userPastors")
+}
+
+model Branch {
+  id            Int            @id @default(autoincrement())
+  name          String
+  address       String?
+  createdAt     DateTime       @default(now())
+  contributions Contribution[]
+  members       Member[]
+  pastors       Pastor[]
+  tithes        Tithe[]
+}
+
+model Member {
+  id            Int            @id @default(autoincrement())
+  firstName     String
+  lastName      String
+  email         String?        @unique
+  phone         String?
+  address       String?
+  joinedAt      DateTime       @default(now())
+  isActive      Boolean        @default(true)
+  branchId      Int?
+  contributions Contribution[]
+  branch        Branch?        @relation(fields: [branchId], references: [id])
+  tithes        Tithe[]
+}
+
+model Pastor {
+  id            Int            @id @default(autoincrement())
+  userId        Int?
+  firstName     String
+  lastName      String
+  email         String?        @unique
+  phone         String?
+  branchId      Int?
+  createdAt     DateTime       @default(now())
+  contributions Contribution[]
+  branch        Branch?        @relation(fields: [branchId], references: [id])
+  user          User?          @relation("userPastors", fields: [userId], references: [id])
+  tithes        Tithe[]
+}
+
+model Tithe {
+  id        Int      @id @default(autoincrement())
+  amount    Float
+  date      DateTime @default(now())
+  note      String?
+  memberId  Int?
+  pastorId  Int?
+  branchId  Int?
+  createdAt DateTime @default(now())
+  branch    Branch?  @relation(fields: [branchId], references: [id])
+  member    Member?  @relation(fields: [memberId], references: [id])
+  pastor    Pastor?  @relation(fields: [pastorId], references: [id])
+}
+
+model Contribution {
+  id        Int      @id @default(autoincrement())
+  amount    Float
+  date      DateTime @default(now())
+  type      String?
+  note      String?
+  memberId  Int?
+  pastorId  Int?
+  branchId  Int?
+  createdAt DateTime @default(now())
+  branch    Branch?  @relation(fields: [branchId], references: [id])
+  member    Member?  @relation(fields: [memberId], references: [id])
+  pastor    Pastor?  @relation(fields: [pastorId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  PASTOR
+  USER
+}
